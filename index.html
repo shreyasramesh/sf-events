@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Shrey's SF Events 🎉</title>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#fff7ea">
@@ -75,6 +75,20 @@ h1 .hl{background:linear-gradient(transparent 62%,#ffe066 62%)}
 .popbtn{margin-top:8px;background:var(--ink);color:#fff;border:0;border-radius:999px;padding:7px 14px;font-weight:800;cursor:pointer}
 footer{text-align:center;color:#8a8378;font-size:13px;margin-top:50px;line-height:1.7}
 .empty{text-align:center;padding:60px 0;font-size:18px;color:#8a8378}
+/* Mobile & foldable tuning — Oppo Find N5 cover screen (~6in) and unfolded inner screen */
+html{-webkit-text-size-adjust:100%}
+body{overflow-x:clip}
+*{-webkit-tap-highlight-color:transparent}
+button,.card,.chip{touch-action:manipulation}
+.toolbar{padding-top:calc(14px + env(safe-area-inset-top))}
+.pbody{padding-bottom:calc(28px + env(safe-area-inset-bottom))}
+#map{height:70vh;height:70dvh}
+.panel{max-height:92vh;max-height:92dvh}
+@media(pointer:coarse){.chip{min-height:44px}.seg button{min-height:44px;padding:8px 20px}.x{width:44px;height:44px}.popbtn{padding:10px 16px}}
+@media(max-width:480px){.wrap{padding:0 12px 64px}.grid{grid-template-columns:1fr;gap:14px}.title{font-size:19px}header{padding-top:26px}}
+@media(min-width:700px){.grid{grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}}
+@media(min-width:900px){.panel{width:min(760px,100%)}}
+@media(min-width:1500px){.wrap{max-width:1320px}.grid{grid-template-columns:repeat(4,1fr)}}
 </style>
 </head>
 <body>
