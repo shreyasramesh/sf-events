@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shrey's SF Events 🎉</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root{--ink:#16130e;--cream:#fff7ea;--card:#ffffff;--green:#12b76a;--amber:#f59e0b;--blue:#3e7bfa;--gray:#8a8f98;--pink:#ff5d8f;--purple:#7c5cff}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Inter,system-ui,sans-serif;background:var(--cream);color:var(--ink);-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.5;background-image:radial-gradient(#ffd9a0 1.6px,transparent 1.6px),radial-gradient(#ffc7d9 1.6px,transparent 1.6px);background-size:46px 46px;background-position:0 0,23px 23px;z-index:0}
+.wrap{position:relative;z-index:1;max-width:1060px;margin:0 auto;padding:0 16px 80px}
+header{padding:34px 0 8px;text-align:center}
+.logo{display:inline-block;background:var(--ink);color:#fff;font-family:Archivo;font-weight:900;font-size:14px;letter-spacing:.4px;padding:8px 16px;border-radius:999px;transform:rotate(-2deg)}
+h1{font-family:Archivo;font-weight:900;font-size:clamp(38px,7vw,64px);line-height:1.02;margin:18px 0 10px;letter-spacing:-1px}
+h1 .hl{background:linear-gradient(transparent 62%,#ffe066 62%)}
+.sub{font-size:16px;color:#5b5648;max-width:560px;margin:0 auto}
+.stats{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:20px 0 4px}
+.stat{background:#fff;border:2px solid var(--ink);border-radius:999px;padding:6px 14px;font-weight:700;font-size:13px;box-shadow:2px 2px 0 var(--ink)}
+.toolbar{position:sticky;top:0;z-index:50;background:var(--cream);padding:14px 0 10px}
+.search{width:100%;border:2px solid var(--ink);border-radius:999px;padding:13px 20px;font-size:16px;font-family:Inter;background:#fff;box-shadow:3px 3px 0 var(--ink);outline:none}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center}
+.chip{border:2px solid var(--ink);background:#fff;color:var(--ink);border-radius:999px;padding:8px 16px;font-weight:700;font-size:14px;cursor:pointer;font-family:Inter}
+.chip.on{background:var(--ink);color:#fff}
+.seg{margin-left:auto;display:flex;border:2px solid var(--ink);border-radius:999px;overflow:hidden;background:#fff}
+.seg button{border:0;background:#fff;padding:8px 18px;font-weight:800;font-size:14px;cursor:pointer;font-family:Inter}
+.seg button.on{background:var(--ink);color:#fff}
+.dayhead{display:flex;align-items:baseline;gap:10px;margin:30px 0 14px}
+.dayhead h2{font-family:Archivo;font-weight:900;font-size:26px;letter-spacing:-.5px}
+.dayhead .n{background:var(--pink);color:#fff;font-size:12px;font-weight:800;border-radius:999px;padding:3px 10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}
+.card{background:var(--card);border-radius:24px;overflow:hidden;cursor:pointer;border:2px solid #16130e12;box-shadow:0 6px 18px #16130e14;transition:transform .15s,box-shadow .15s}
+.card:hover{transform:translateY(-3px) rotate(-.3deg);box-shadow:0 14px 28px #16130e22}
+.ph{position:relative;aspect-ratio:16/9.5;background:#eee;overflow:hidden}
+.ph img{width:100%;height:100%;object-fit:cover;display:block}
+.ph .noimg{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:64px}
+.pill{position:absolute;top:12px;left:12px;color:#fff;font-weight:800;font-size:12px;padding:6px 12px;border-radius:999px;border:2px solid #fff;box-shadow:0 2px 8px #0003}
+.pill.going{background:var(--green)}.pill.paid{background:var(--amber)}.pill.calendar{background:var(--blue)}.pill.awareness{background:var(--gray)}
+.body{padding:16px 18px 18px}
+.when{font-weight:800;font-size:13px;letter-spacing:.3px;text-transform:uppercase;color:var(--purple)}
+.title{font-family:Archivo;font-weight:800;font-size:20px;line-height:1.15;margin:6px 0 8px}
+.venue{color:#5b5648;font-size:14px;font-weight:600}
+.meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.tag{font-size:12px;font-weight:700;background:#f3efe6;border-radius:999px;padding:5px 10px}
+.tag.price{background:#fef3c7}
+#mapView{display:none}
+#map{height:70vh;border-radius:24px;border:2px solid var(--ink);box-shadow:4px 4px 0 var(--ink)}
+.pin{width:20px;height:20px;border-radius:50%;border:3px solid #fff;box-shadow:0 1px 6px #0006}
+.sheet{position:fixed;inset:0;z-index:100;display:none}
+.sheet.open{display:block}
+.scrim{position:absolute;inset:0;background:#16130e99}
+.panel{position:absolute;left:50%;transform:translateX(-50%);bottom:0;width:min(680px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:28px 28px 0 0;animation:up .25s ease}
+@keyframes up{from{transform:translate(-50%,40px);opacity:.4}to{transform:translate(-50%,0);opacity:1}}
+@media(min-width:700px){.panel{bottom:auto;top:50%;transform:translate(-50%,-50%);border-radius:28px}@keyframes up{from{transform:translate(-50%,-46%);opacity:.4}to{transform:translate(-50%,-50%);opacity:1}}}
+.panel .ph{aspect-ratio:16/8}
+.x{position:absolute;top:14px;right:14px;z-index:2;background:var(--ink);color:#fff;border:0;width:38px;height:38px;border-radius:50%;font-size:18px;cursor:pointer}
+.pbody{padding:22px 24px 28px}
+.pbody h2{font-family:Archivo;font-weight:900;font-size:30px;line-height:1.08;margin:8px 0 14px}
+.row{display:flex;gap:12px;padding:10px 0;border-top:2px dashed #eee5d3;font-size:15px}
+.row .ic{font-size:19px}
+.row b{font-weight:800}
+.btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+.btn{background:var(--ink);color:#fff;text-decoration:none;font-weight:800;padding:13px 22px;border-radius:999px;font-size:15px;border:2px solid var(--ink)}
+.btn.ghost{background:#fff;color:var(--ink)}
+#miniMap{height:220px;border-radius:18px;margin-top:18px;border:2px solid #16130e22}
+.leaflet-popup-content{font-family:Inter;font-size:14px}
+.leaflet-popup-content b{font-family:Archivo}
+.popbtn{margin-top:8px;background:var(--ink);color:#fff;border:0;border-radius:999px;padding:7px 14px;font-weight:800;cursor:pointer}
+footer{text-align:center;color:#8a8378;font-size:13px;margin-top:50px;line-height:1.7}
+.empty{text-align:center;padding:60px 0;font-size:18px;color:#8a8378}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<div class="logo">🎉 SHREY'S SF EVENTS</div>
+<h1>You're <span class="hl">going out!</span> 🥳</h1>
+<p class="sub">Every event Shreyas &amp; Lavanya are signed up for — plus the paid ones awaiting a yes, and the best free finds around the Bay. Nov 2026 → Feb 2027.</p>
+<div class="stats" id="stats"></div>
+</header>
+<div class="toolbar">
+<input class="search" id="q" type="search" placeholder="🔍 Search events, venues, neighborhoods…">
+<div class="chips" id="chips">
+<button class="chip on" data-f="all">All events</button>
+<button class="chip" data-f="going">✅ Going</button>
+<button class="chip" data-f="paid">💸 Paid · needs approval</button>
+<button class="chip" data-f="calendar">📅 On calendar</button>
+<button class="chip" data-f="awareness">👀 Awareness</button>
+<div class="seg"><button id="vList" class="on">List</button><button id="vMap">Map</button></div>
+</div>
+</div>
+<main id="listView"></main>
+<div id="mapView"><div id="map"></div></div>
+<footer>Photos scraped from Partiful · Times marked estimated where the listing didn't give an end time<br>5 events have no map pin (venue not announced yet) · Made with Muse · Updated Nov 14, 2026</footer>
+</div>
+<div class="sheet" id="sheet"><div class="scrim" id="scrim"></div><div class="panel" id="panel"></div></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const EVENTS = [
+ {
+  "title": "SF Tea Festival",
+  "date": "2026-11-15",
+  "start": "",
+  "end": "",
+  "venue": "Festival Pavilion area",
+  "address": "San Francisco, CA",
+  "source": "funcheap",
+  "status": "paid",
+  "url": "",
+  "price": "$19-24/person",
+  "note": "Ticketed food festival",
+  "img": "",
+  "lat": null,
+  "lng": null
+ },
+ {
+  "title": "cole valley closet sale",
+  "date": "2026-11-15",
+  "start": "10:00",
+  "end": "12:00",
+  "venue": "The stoop next to the bike shop",
+  "address": "840 Cole St, San Francisco, CA",
+  "source": "partiful",
+  "status": "going",
+  "url": "https://partiful.com/e/SoxBjzqvybNAK1yJoYQa",
+  "price": "",
+  "note": "End time estimated",
+  "img": "https://partiful.imgix.net/external/user/llBuXJ3jSQTSFN6KyMnpy15LqPA2/iLj3-mKyjsGuOxEIIo_It?fit=clip&w=1440&auto=format",
+  "lat": 37.76619,
+  "lng": -122.44987
+ },
+ {
+  "title": "DIWALI PASTRY POP-UP",
+  "date": "2026-11-15",
+  "start": "11:00",
+  "end": "14:00",
+  "venue": "Le Mil's",
+  "address": "1330 Polk St, San Francisco, CA",
+  "source": "partiful",
+  "status": "going",
+  "url": "https://partiful.com/e/RhDR2aIFaDpakAhe6JmQ",
+  "price": "",
+  "note": "",
+  "img": "https://partiful.imgix.net/external/user/uPItdmaZegWSjzrwssUwfMTrXe22/P8WVCiazq3QdGnzL58b5O?fit=clip&w=1440&auto=format",
+  "lat": 37.78932,
+  "lng": -122.4202
+ },
+ {
+  "title": "Renegade Craft Holiday Fair",
+  "date": "2026-11-15",
+  "start": "11:00",
+  "end": "17:00",
+  "venue": "Fort Mason Center Festival Pavilion",
+  "address": "2 Marina Blvd, San Francisco, CA",
+  "source": "funcheap",
+  "status": "calendar",
+  "url": "https://sf.funcheap.com/sfs-renegade-craft-holiday-2026-fair-w-250-makers-at-fort-mason-nov-14-15/",
+  "price": "$5 suggested entry",
+  "note": "250+ makers, food trucks",
+  "img": "",
+  "lat": 37.80551,
+  "lng": -122.43194
+ },
+ {
+  "title": "Cookie Picnic (indoors) pt2!!",
+  "date": "2026-11-15",
+  "start": "13:00",
+  "end": "16:00",
+  "venue": "Mysterious old bank",
+  "address": "1469 Webster St, San Francisco, CA",
+  "source": "partiful",
+  "status": "going",
+  "url": "https://partiful.com/e/S4npXV6YwHIhm6rLE47m",
+  "price": "",
+  "note": "",
+  "img": "https://media1.giphy.com/media/ptKqEC4VYVtWhmjQIF/giphy.webp?cid=962e12b1gagngv1lns6yfzs9qz3epamgn57rvwvcld5hnn7v&ep=v1_gifs_search&rid=giphy.webp&ct=g",
+  "lat": 37.78391,
+  "lng": -122.43129
+ },
+ {
+  "title": "Candle Class",
+  "date": "2026-11-15",
+  "start": "13:00",
+  "end": "18:00",
+  "venue": "Venue hidden on listing",
+  "address": "San Francisco, CA",
+  "source": "partiful",
+  "status": "paid",
+  "url": "https://partiful.com/e/2DGwMVQCSzWJuP9csqWV",
+  "price": "$30/person",
+  "note": "Full; RSVP deadline passed",
+  "img": "https://partiful.imgix.net/external/user/5KWL75kMzVaqGuhDwOxZqETwYXA2/v_1xA-yAZhra7UNLqjRla?fit=clip&w=1440&auto=format",
+  "lat": null,
+  "lng": null
+ },
+ {
+  "title": "Golden Gate Park East End FREE Walking Tour (SF City Guides)",
+  "date": "2026-11-15",
+  "start": "14:00",
+  "end": "16:00",
+  "venue": "Conservatory of Flowers",
+  "address": "100 John F Kennedy Dr, San Francisco, CA",
+  "source": "partiful",
+  "status": "going",
+  "url": "https://partiful.com/e/pl8dMAKg19N7QfsQgiEF",
+  "price": "",
+  "note": "",
+  "img": "https://partiful.imgix.net/external/user/ya7z9ZIV4pNDDAc0L3CFa16K3qn1/yCOQ-T7JTeASXkVrqY7gL?fit=clip&w=1440&auto=format",
+  "lat": 37.7715,
+  "lng": -122.46871
+ },
+ {
+  "title": "SF Civic Music Free Concert",
+  "date": "2026-11-15",
+  "start": "15:00",
+  "end": "17:00",
+  "venue": "Herbst Theatre",
+  "address": "401 Van Ness Ave, San Francisco, CA",
+  "source": "funcheap",
+  "status": "calendar",
+  "url": "",
+  "price": "Free",
+  "note": "Free classical concert",
+  "img": "",
+  "lat": 37.77939,
+  "lng": -122.42091
+ },
+ {
+  "title": "Thirst Draft: Write Drunk, Edit Never",
+  "date": "2026-11-15",
+  "start": "18:00",
+  "end": "21:00",
+  "venue": "Madrone Art Bar",
+  "address": "500 Divisadero St, San Francisco, CA",
+  "source": "partiful",
+  "status": "going",
+  "url": "https://partiful.com/e/94vpKQFnzoIzNcgzWFJD",
+  "price": "",
+  "note": "",
+  "img": "https://partiful.imgix.net/external/user/vqjEn2dBgbcqdsdzkZQ7/PSppC8RgG_m0pjrf2sEFv?fit=clip&w=1440&auto=format",
+  "lat": 37.77422,
+  "lng": -122.43736
+ },
+ {
+  "title": "Japanese Tea Garden Free Admission Hour",
+  "date": "2026-11-16",
+  "start": "09:00",
+  "end": "10:00",
+  "venue": "Japanese Tea Garden",
+  "address": "75 Hagiwara Tea Garden Dr, San Francisco, CA",
+  "source": "partiful",
+  "status": "going",
+  "url": "https://partiful.com/e/GPxnHH5I1pRMqD0KorLS",
+  "price": "",
+  "note": "",
+  "img": "https://partiful.imgix.net/external/user/UWqdwVEOgEspoAGNuRyR/nkAzvHLRDSNFWC56yoxG4?fit=clip&w=1440&auto=format",
+  "lat": 37.77015,
+  "lng": -122.47039
+ },
+ {
+  "title": "The Museum of (Extra)Ordinary Things",
+  "date": "2026-11-17",
+  "start": "17:00",
+  "end": "21:00",
+  "venue": "The Loft",
+  "address": "3108 B Fillmore St, San Francisco, CA",
+  "source": "partiful",
+  "status": "awareness",
+  "url": "https://partiful.com/e/juvaCN3TLK2cquyH8LMq",
+  "price": "Free",
+  "note": "Clashes with game night",
+  "img": "",
+  "lat": 37.79827,
+  "lng": -122.43548
+ },
+ {
+  "title": "Community Gratitude: Meet Your Neighbors",
+  "date": "2026-11-17",
+  "start": "18:30",
+  "end": "20:00",
+  "venue": "Eureka Valley - Harvey Milk Branch Library",
+  "address": "3555 16th St, San Francisco, CA",
+  "source": "partiful",
+  "status": "going",
+  "url": "https://partiful.com/e/7rn4GaH3pcU7yUAougrS",
+  "price": "",
+  "note": "Great for meeting people",
+  "img": "https://partiful.imgix.net/external/user/NVnujKuyaEUO499bEgTaOQegnot2/BQAAmqLgAnguMfgCmY0Uc?fit=clip&w=1440&auto=format",
+  "lat": 37.76416,
+  "lng": -122.43194
+ },
+ {
+  "title": "A Friendsgiving Wine Tasting Class with Wine Club SF x Fat Cat!",
+  "date": "2026-11-17",
+  "start": "18:30",
+  "end": "21:30",
+  "venue": "Fat Cat",
+  "address": "3215 Mission St, San Francisco, CA",
+  "source": "partiful",
+  "status": "paid",
+  "url": "https://partiful.com/e/3Fnq2BDNBUgaf4W7p1yc",
+  "price": "ticketed, price not listed",
+  "note": "Overlaps Community Gratitude event",
+  "img": "https://partiful.imgix.net/external/user/kplE3z7o8Vq9N2O4zKlU/gw9FZxxHmUU1CFIJwFvjo?fit=clip&w=1440&auto=format",
+  "lat": 37.74517,
+  "lng": -122.41972
+ },
+ {
+  "title": "Big Art Loop: Waterfront Walkabout",
+  "date": "2026-11-19",
+  "start": "17:00",
+  "end": "19:00",
+  "venue": "Embarcadero (starts at Ferry Building plaza)",
+  "address": "Embarcadero, San Francisco, CA",
+  "source": "partiful",
+  "status": "going",
+  "url": "https://partiful.com/e/IJ9ZZohYSziYFTlmGPLR",
+  "price": "",
+  "note": "End time estimated",
+  "img": "https://partiful.imgix.net/external/user/UWqdwVEOgEspoAGNuRyR/QKDEf6zk2NYqZcDjDHBTB?fit=clip&w=1440&auto=format",
+  "lat": 37.79532,
+  "lng": -122.39395
+ },
+ {
+  "title": "SF SPCA + Macy's 40th Annual Holiday Windows",
+  "date": "2026-11-20",
+  "start": "17:00",
+  "end": "19:00",
+  "venue": "Macy's Union Square",
+  "address": "170 O'Farrell St, San Francisco, CA",
+  "source": "partiful",
+  "status": "going",
+  "url": "https://partiful.com/e/EHT33GKOEHkjLZrjuTy7",
+  "price": "",
+  "note": "End time estimated",
+  "img": "https://partiful.imgix.net/external/user/e8AHD3d7OyTfkaZ919Jt/Q3cFTK2P7qKCa5p1BsR9I?fit=clip&w=1440&auto=format",
+  "lat": 37.78679,
+  "lng": -122.40736
+ },
+ {
+  "title": "LOCAL FREQUENCIES | ART SHOW",
+  "date": "2026-11-20",
+  "start": "17:30",
+  "end": "22:30",
+  "venue": "West Portal Gallery",
+  "address": "320 W Portal Ave, San Francisco, CA",
+  "source": "partiful",
+  "status": "paid",
+  "url": "https://partiful.com/e/oKPunDS7dsvSQq2zh6bN",
+  "price": "$13",
+  "note": "",
+  "img": "https://partiful.imgix.net/external/user/HhA4YbtWiHkdW99tMXeU/t81hR_8f-XAGr1mFLz35V?fit=clip&w=1440&auto=format",
+  "lat": 37.73774,
+  "lng": -122.46963
+ },
+ {
+  "title": "Love Without Borders: Refugee Art Show",
+  "date": "2026-11-20",
+  "start": "18:00",
+  "end": "22:00",
+  "venue": "Basil House / Decentered Studio",
+  "address": "1175 Folsom St, Floor 3, San Francisco, CA",
+  "source": "partiful",
+  "status": "going",
+  "url": "https://partiful.com/e/8SVpZTT3lNBdoPdDXvoo",
+  "price": "",
+  "note": "Pay-what-you-can; $15 donation suggested",
+  "img": "https://partiful.imgix.net/external/user/xWUqxuDUlXcxW6amom7F9kWm0Ex1/pUyXaT26Eja4Ay3vHQ_tl?fit=clip&w=1440&auto=format",
+  "lat": 37.77533,
+  "lng": -122.40918
+ },
+ {
+  "title": "Second Saturdays",
+  "date": "2026-11-21",
+  "start": "10:00",
+  "end": "16:00",
+  "venue": "Secondhand market",
+  "address": "37th Ave & Ortega St, San Francisco, CA",
+  "source": "partiful",
+  "status": "going",
+  "url": "https://partiful.com/e/nEvPGBuYBd1MWBE8BQkr",
+  "price": "",
+  "note": "",
+  "img": "https://partiful.imgix.net/external/user/e8AHD3d7OyTfkaZ919Jt/rS4LxQqkmNbuL4Oc1-IFJ?fit=clip&w=1440&auto=format",
+  "lat": 37.75151,
+  "lng": -122.49563
+ },
+ {
+  "title": "Great Dickens Christmas Fair",
+  "date": "2026-11-21",
+  "start": "10:00",
+  "end": "18:00",
+  "venue": "Cow Palace",
+  "address": "2600 Geneva Ave, Daly City, CA",
+  "source": "funcheap",
+  "status": "paid",
+  "url": "https://dickensfair.com",
+  "price": "$50 adult ($55.92 w/ fees); twilight $35",
+  "note": "Weekends Nov 21-Dec 20 + Fri Nov 27; shown date is opening day",
+  "img": "",
+  "lat": 37.70693,
+  "lng": -122.41906
+ },
+ {
+  "title": "West Coast Craft: Winter '26",
+  "date": "2026-11-21",
+  "start": "10:00",
+  "end": "18:00",
+  "venue": "Fort Mason Center Festival Pavilion",
+  "address": "2 Marina Blvd, San Francisco, CA",
+  "source": "funcheap",
+  "status": "calendar",
+  "url": "https://www.westcoastcraft.com/attendee-calendar",
+  "price": "Free",
+  "note": "Also Sun Nov 22",
+  "img": "",
+  "lat": 37.80551,
+  "lng": -122.43194
+ },
+ {
+  "title": "Visions Of Utopia - Art Show",
+  "date": "2026-11-21",
+  "start": "17:00",
+  "end": "20:00",
+  "venue": "Sunshine Art House",
+  "address": "4338 California St, San Francisco, CA",
+  "source": "partiful",
+  "status": "going",
+  "url": "https://partiful.com/e/6wAk3qkcJquQeW3TrQPd",
+  "price": "",
+  "note": "",
+  "img": "https://partiful.imgix.net/external/user/tORGs9VfxbN6VPPY5iKZtsstpPr1/1UQFyCbymeyUCHbF6e9Lw?fit=clip&w=1440&auto=format",
+  "lat": 37.78531,
+  "lng": -122.46409
+ },
+ {
+  "title": "Live Reggae Season Finale",
+  "date": "2026-11-22",
+  "start": "16:30",
+  "end": "18:30",
+  "venue": "Golden Gate Bandshell Concerts",
+  "address": "501 Stanyan St, San Francisco, CA",
+  "source": "partiful",
+  "status": "going",
+  "url": "https://partiful.com/e/VipID4lqQ2x5qL9dBDAs",
+  "price": "",
+  "note": "End time estimated",
+  "img": "https://partiful.imgix.net/external/user/UWqdwVEOgEspoAGNuRyR/rHmiRGcucoxbQ0aZHxzTs?fit=clip&w=1440&auto=format",
+  "lat": 37.77,
+  "lng": -122.46741
+ },
+ {
+  "title": "Gobble Gobble Wine Bar Crawl",
+  "date": "2026-11-24",
+  "start": "18:30",
+  "end": "21:30",
+  "venue": "Venue TBA",
+  "address": "San Francisco, CA",
+  "source": "partiful",
+  "status": "paid",
+  "url": "https://partiful.com/e/rWcXfThcUqmEN68zUpGn",
+  "price": "ticketed, price not listed",
+  "note": "Clashes with Isha wedding",
+  "img": "https://partiful.imgix.net/external/user/kplE3z7o8Vq9N2O4zKlU/mp2RnvUsz0sdPnK5_-9GF?fit=clip&w=1440&auto=format",
+  "lat": null,
+  "lng": null
+ },
+ {
+  "title": "Ghirardelli Square Tree Lighting",
+  "date": "2026-11-27",
+  "start": "16:30",
+  "end": "20:00",
+  "venue": "Ghirardelli Square",
+  "address": "900 N Point St, San Francisco, CA",
+  "source": "partiful",
+  "status": "going",
+  "url": "https://partiful.com/e/BwiPEUdJyrre6Ph1bXWS",
+  "price": "",
+  "note": "Overlaps Burbank travel",
+  "img": "https://partiful.imgix.net/external/user/UWqdwVEOgEspoAGNuRyR/nALj7N7hsXL70ETEfEqEl?fit=clip&w=1440&auto=format",
+  "lat": 37.80585,
+  "lng": -122.42292
+ },
+ {
+  "title": "Illuminate SF Festival of Light",
+  "date": "2026-11-27",
+  "start": "17:00",
+  "end": "19:00",
+  "venue": "Installations across downtown SF",
+  "address": "Downtown, San Francisco, CA",
+  "source": "partiful",
+  "status": "going",
+  "url": "https://partiful.com/e/Coy8OM4HYWP8SZWgZv2F",
+  "price": "",
+  "note": "End time estimated; overlaps Burbank travel",
+  "img": "https://partiful.imgix.net/external/user/UWqdwVEOgEspoAGNuRyR/kmxkKjZSovugKP-iAnbNf?fit=clip&w=1440&auto=format",
+  "lat": 37.78847,
+  "lng": -122.40297
+ },
+ {
+  "title": "craft cafe SF: fiber arts meetup",
+  "date": "2026-11-28",
+  "start": "14:00",
+  "end": "16:00",
+  "venue": "Robin Williams Meadow",
+  "address": "Kezar Dr and Bowling Green Dr, San Francisco, CA",
+  "source": "partiful",
+  "status": "awareness",
+  "url": "https://partiful.com/e/byqdC3o3YValGGEoOiy1",
+  "price": "Free",
+  "note": "During Burbank/Joshua Tree travel",
+  "img": "",
+  "lat": 37.76861,
+  "lng": -122.45902
+ },
+ {
+  "title": "Nob Hill Tree Lighting Ceremony",
+  "date": "2026-11-30",
+  "start": "17:30",
+  "end": "19:30",
+  "venue": "Huntington Park",
+  "address": "Nob Hill, San Francisco, CA",
+  "source": "funcheap",
+  "status": "calendar",
+  "url": "",
+  "price": "Free",
+  "note": "",
+  "img": "",
+  "lat": 37.79137,
+  "lng": -122.41205
+ },
+ {
+  "title": "555 California Holiday Tree Lighting and Mercantile",
+  "date": "2026-12-01",
+  "start": "11:00",
+  "end": "19:00",
+  "venue": "A. P. Giannini Plaza",
+  "address": "450 Kearny St, San Francisco, CA",
+  "source": "partiful",
+  "status": "going",
+  "url": "https://partiful.com/e/q9aEai9bF6wmcpjLFIPm",
+  "price": "",
+  "note": "",
+  "img": "https://partiful.imgix.net/external/user/lUhnyEHcfYI5QdsMnnOj/OeGnIlVi2tlWBNzLD5Hal?fit=clip&w=1440&auto=format",
+  "lat": 37.79223,
+  "lng": -122.40413
+ },
+ {
+  "title": "Ritz-Carlton Annual Tree Lighting Ceremony",
+  "date": "2026-12-02",
+  "start": "17:30",
+  "end": "19:30",
+  "venue": "The Ritz-Carlton",
+  "address": "600 Stockton St, San Francisco, CA",
+  "source": "funcheap",
+  "status": "calendar",
+  "url": "",
+  "price": "Free",
+  "note": "",
+  "img": "",
+  "lat": 37.78851,
+  "lng": -122.40677
+ },
+ {
+  "title": "Dark Matter Salon Sip & Shop + Opening Party",
+  "date": "2026-12-03",
+  "start": "16:00",
+  "end": "21:00",
+  "venue": "Dark Matter Salon",
+  "address": "660 Market St, Ste 205, San Francisco, CA",
+  "source": "partiful",
+  "status": "going",
+  "url": "https://partiful.com/e/4uaYV0Ze1tUNjlT0TK8k",
+  "price": "",
+  "note": "",
+  "img": "https://partiful.imgix.net/external/user/6GSQsnhuyjYey7aRW61y5jHvntk2/DreT5yp24mEfDAa4ysCDf?fit=clip&w=1440&auto=format",
+  "lat": 37.78847,
+  "lng": -122.40297
+ },
+ {
+  "title": "Downtown First Thursdays (block party)",
+  "date": "2026-12-03",
+  "start": "17:00",
+  "end": "22:00",
+  "venue": "2nd Street, Downtown",
+  "address": "2nd St between Market & Howard, San Francisco, CA",
+  "source": "funcheap",
+  "status": "calendar",
+  "url": "",
+  "price": "Free (Eventbrite RSVP available)",
+  "note": "",
+  "img": "",
+  "lat": 37.78679,
+  "lng": -122.39825
+ },
+ {
+  "title": "Drag Queens on Ice (Drag on Ice)",
+  "date": "2026-12-03",
+  "start": "18:30",
+  "end": "20:00",
+  "venue": "Safeway Holiday Ice Rink, Union Square",
+  "address": "333 Post St, San Francisco, CA",
+  "source": "funcheap",
+  "status": "calendar",
+  "url": "https://sf.funcheap.com/event-series/holiday-ice-skating-rink-union-square-sf/",
+  "price": "Free to watch; $35 to skate",
+  "note": "",
+  "img": "",
+  "lat": 37.78793,
+  "lng": -122.4075
+ },
+ {
+  "title": "Holiday Projection Arts Festival",
+  "date": "2026-12-04",
+  "start": "17:30",
+  "end": "22:00",
+  "venue": "Ferry Building",
+  "address": "1 Ferry Building, San Francisco, CA",
+  "source": "partiful",
+  "status": "going",
+  "url": "https://partiful.com/e/skmIwtYBK82ZgpCCkXTa",
+  "price": "",
+  "note": "Let's Glow SF",
+  "img": "https://partiful.imgix.net/external/user/UWqdwVEOgEspoAGNuRyR/_5rn-wTQibKXh3NkAxFBm?fit=clip&w=1440&auto=format",
+  "lat": 37.79532,
+  "lng": -122.39395
+ },
+ {
+  "title": "Madrone Holiday Market",
+  "date": "2026-12-05",
+  "start": "10:00",
+  "end": "15:00",
+  "venue": "Madrone Art Bar",
+  "address": "500 Divisadero St, San Francisco, CA",
+  "source": "partiful",
+  "status": "going",
+  "url": "https://partiful.com/e/R3H9ycTqEwr0qzkxFUbc",
+  "price": "",
+  "note": "",
+  "img": "https://partiful.imgix.net/external/user/vqjEn2dBgbcqdsdzkZQ7/3i-NRrnC-7SWJyt6cohZ1?fit=clip&w=1440&auto=format",
+  "lat": 37.77422,
+  "lng": -122.43736
+ },
+ {
+  "title": "sf clothing swap",
+  "date": "2026-12-05",
+  "start": "11:00",
+  "end": "13:00",
+  "venue": "Humanmade",
+  "address": "655 Bryant St, San Francisco, CA",
+  "source": "partiful",
+  "status": "going",
+  "url": "https://partiful.com/e/ebMOF4yMUZl9MjSb7p2x",
+  "price": "",
+  "note": "End time estimated",
+  "img": "https://partiful.imgix.net/external/user/kACjjvHTrraTeQFuQeZuC0eLhM93/sY0KhRkA3qqVGZF_NioU0?fit=clip&w=1440&auto=format",
+  "lat": 37.77822,
+  "lng": -122.3995
+ },
+ {
+  "title": "Sunset Holiday Mercantile",
+  "date": "2026-12-05",
+  "start": "11:00",
+  "end": "17:00",
+  "venue": "SF County Fair Building, Golden Gate Park",
+  "address": "9th Ave & Lincoln Way, San Francisco, CA",
+  "source": "funcheap",
+  "status": "calendar",
+  "url": "",
+  "price": "Free",
+  "note": "Also Sun Dec 6",
+  "img": "",
+  "lat": 37.76593,
+  "lng": -122.46644
+ },
+ {
+  "title": "krampus pageant",
+  "date": "2026-12-05",
+  "start": "16:00",
+  "end": "18:00",
+  "venue": "El Rio",
+  "address": "3158 Mission St, San Francisco, CA",
+  "source": "partiful",
+  "status": "paid",
+  "url": "https://partiful.com/e/dGgxNNUwKf3GC6sKx3ex",
+  "price": "$10-20 donation at door",
+  "note": "Doors 3pm",
+  "img": "https://media4.giphy.com/media/FwWKHOC0x2orPhJZH5/giphy.webp?cid=c00e53c6c5olo1wcf4xtkfcuvbtraq36zcbu10kgkgq6e4q0&ep=v1_gifs_search&rid=giphy.webp&ct=g",
+  "lat": 37.74681,
+  "lng": -122.41946
+ },
+ {
+  "title": "Block Clean Up",
+  "date": "2026-12-06",
+  "start": "09:00",
+  "end": "11:45",
+  "venue": "26th Ave & Cabrillo",
+  "address": "26th Ave & Cabrillo St, San Francisco, CA",
+  "source": "partiful",
+  "status": "awareness",
+  "url": "https://partiful.com/e/lmqFIxmMnxs72QxkbaBj",
+  "price": "Free",
+  "note": "During Vegas travel",
+  "img": "",
+  "lat": 37.7744,
+  "lng": -122.48539
+ },
+ {
+  "title": "Atomic Workshop Holiday Market",
+  "date": "2026-12-06",
+  "start": "11:00",
+  "end": "14:30",
+  "venue": "The Progress",
+  "address": "1525 Fillmore St, San Francisco, CA",
+  "source": "partiful",
+  "status": "awareness",
+  "url": "https://partiful.com/e/qpwyhMHlHFo63BlPDegH",
+  "price": "Free",
+  "note": "During Vegas travel",
+  "img": "",
+  "lat": 37.78368,
+  "lng": -122.43296
+ },
+ {
+  "title": "Mahjong and Bites: Malaysian Nyonya Tea Time Kuih-Muih",
+  "date": "2026-12-06",
+  "start": "13:00",
+  "end": "16:00",
+  "venue": "OM Waverly Clubhouse (per flyer)",
+  "address": "60 Waverly Pl, San Francisco, CA",
+  "source": "partiful",
+  "status": "paid",
+  "url": "https://partiful.com/e/qhp1OIq0OXzEab6Oueng",
+  "price": "$60/person",
+  "note": "Full; during Vegas travel",
+  "img": "https://partiful.imgix.net/external/user/mhhy6Vsok6a6Oa4ozAbTAOWxAuk2/1rYdVsKvT3S53mec9gH02?fit=clip&w=1440&auto=format",
+  "lat": 37.79385,
+  "lng": -122.40656
+ },
+ {
+  "title": "Celebrate 2 years of Crafternoon Club",
+  "date": "2026-12-06",
+  "start": "13:00",
+  "end": "16:00",
+  "venue": "Society of Thumbs",
+  "address": "1398 Valencia St, San Francisco, CA",
+  "source": "partiful",
+  "status": "awareness",
+  "url": "https://partiful.com/e/injpzE5oreoPOwO0WVuf",
+  "price": "Free",
+  "note": "During Vegas travel",
+  "img": "",
+  "lat": 37.75064,
+  "lng": -122.42081
+ },
+ {
+  "title": "Crafting in Dolores Park (BYOC) Vol 2 - Holiday Edition",
+  "date": "2026-12-06",
+  "start": "13:00",
+  "end": "14:00",
+  "venue": "Dolores Park",
+  "address": "566 Dolores St, San Francisco, CA",
+  "source": "partiful",
+  "status": "awareness",
+  "url": "https://partiful.com/e/jJZ0hOduCFwEPCurnBzW",
+  "price": "Free",
+  "note": "During Vegas travel; event full",
+  "img": "",
+  "lat": 37.75902,
+  "lng": -122.42592
+ },
+ {
+  "title": "Better Than TV: A Live Sketch Comedy Show",
+  "date": "2026-12-06",
+  "start": "20:00",
+  "end": "21:30",
+  "venue": "447 Minna",
+  "address": "447 Minna St, San Francisco, CA",
+  "source": "partiful",
+  "status": "awareness",
+  "url": "https://partiful.com/e/E7Z1jjqIa3jiECoKNWmV",
+  "price": "Free",
+  "note": "During Vegas travel; event full",
+  "img": "",
+  "lat": 37.78138,
+  "lng": -122.40693
+ },
+ {
+  "title": "Patchwork Show @ Winter Walk",
+  "date": "2026-12-09",
+  "start": "11:00",
+  "end": "14:00",
+  "venue": "Winter Walk, Union Square",
+  "address": "Stockton St, San Francisco, CA",
+  "source": "partiful",
+  "status": "going",
+  "url": "https://partiful.com/e/sT50nZdpqQvZvo5pBhSl",
+  "price": "",
+  "note": "End time estimated",
+  "img": "https://partiful.imgix.net/external/user/UWqdwVEOgEspoAGNuRyR/HgISQy0LJFVLsQiOZV6v2?fit=clip&w=1440&auto=format",
+  "lat": 37.78851,
+  "lng": -122.40677
+ },
+ {
+  "title": "Sonam\u00f3 + DJ Nino MSK",
+  "date": "2026-12-10",
+  "start": "21:00",
+  "end": "23:00",
+  "venue": "Madrone Art Bar",
+  "address": "500 Divisadero St, San Francisco, CA",
+  "source": "partiful",
+  "status": "awareness",
+  "url": "https://partiful.com/e/G93XJKC9nfd1RGnOOyr4",
+  "price": "Free",
+  "note": "Vegas return day; end estimated",
+  "img": "",
+  "lat": 37.77422,
+  "lng": -122.43736
+ },
+ {
+  "title": "Holidays on Taraval Block Party",
+  "date": "2026-12-11",
+  "start": "16:00",
+  "end": "20:00",
+  "venue": "McCoppin Square",
+  "address": "Taraval St, San Francisco, CA",
+  "source": "funcheap",
+  "status": "calendar",
+  "url": "",
+  "price": "Free",
+  "note": "End time varies 8-9pm",
+  "img": "",
+  "lat": 37.74296,
+  "lng": -122.48017
+ },
+ {
+  "title": "Mahjong in the Mission",
+  "date": "2026-12-11",
+  "start": "18:00",
+  "end": "21:00",
+  "venue": "Society of Thumbs",
+  "address": "1398 Valencia St, San Francisco, CA",
+  "source": "partiful",
+  "status": "paid",
+  "url": "https://partiful.com/e/dwU3tq0DjaapNiJNuPdF",
+  "price": "$22/person",
+  "note": "",
+  "img": "https://partiful.imgix.net/external/user/mhhy6Vsok6a6Oa4ozAbTAOWxAuk2/e0g-8QMd_pG_CGIjc0nnP?fit=clip&w=1440&auto=format",
+  "lat": 37.75064,
+  "lng": -122.42081
+ },
+ {
+  "title": "Holiday Vibe Market @ Pier 27",
+  "date": "2026-12-12",
+  "start": "11:00",
+  "end": "14:00",
+  "venue": "Pier 27",
+  "address": "27 The Embarcadero, San Francisco, CA",
+  "source": "partiful",
+  "status": "going",
+  "url": "https://partiful.com/e/z4D8f5mEk3EsQvgjXd2g",
+  "price": "",
+  "note": "End time estimated",
+  "img": "https://partiful.imgix.net/external/user/UWqdwVEOgEspoAGNuRyR/WGiPGT2H2ZzEtsCeq8Wig?fit=clip&w=1440&auto=format",
+  "lat": 37.79532,
+  "lng": -122.39395
+ },
+ {
+  "title": "Santa Skivvies Run",
+  "date": "2026-12-13",
+  "start": "09:30",
+  "end": "11:30",
+  "venue": "Castro District",
+  "address": "Castro St, San Francisco, CA",
+  "source": "funcheap",
+  "status": "calendar",
+  "url": "",
+  "price": "Free to watch",
+  "note": "Start time estimated (morning)",
+  "img": "",
+  "lat": 37.76201,
+  "lng": -122.43469
+ },
+ {
+  "title": "HOLY MOLY! Winter Market at the real Princess Diaries House",
+  "date": "2026-12-13",
+  "start": "11:00",
+  "end": "16:00",
+  "venue": "Princess Diaries House",
+  "address": "724 Brazil Ave, San Francisco, CA",
+  "source": "partiful",
+  "status": "paid",
+  "url": "https://partiful.com/e/0vfKni2xUyBThQFRrvJD",
+  "price": "from $25",
+  "note": "",
+  "img": "https://partiful.imgix.net/external/user/e12QsI2CUmZPXFh2M8JWiR0jz2m1/6sw5ZkseN2_5McBgycCGD?fit=clip&w=1440&auto=format",
+  "lat": 37.72161,
+  "lng": -122.42889
+ },
+ {
+  "title": "CAROLING IN PUBLIC",
+  "date": "2026-12-13",
+  "start": "18:30",
+  "end": "20:00",
+  "venue": "Patricia's Green, Hayes Valley",
+  "address": "499 Octavia St, San Francisco, CA",
+  "source": "partiful",
+  "status": "going",
+  "url": "https://partiful.com/e/aoZjYGYQ28saJ0xU4q1i",
+  "price": "",
+  "note": "End time estimated",
+  "img": "https://partiful-posters.imgix.net/xmascarolcassette.png?fit=max&w=1440",
+  "lat": 37.7765,
+  "lng": -122.42481
+ },
+ {
+  "title": "Fort Mason Holiday Night Market",
+  "date": "2026-12-18",
+  "start": "17:00",
+  "end": "20:00",
+  "venue": "Fort Mason Center for Arts & Culture",
+  "address": "2 Marina Blvd Bldg C, San Francisco, CA",
+  "source": "partiful",
+  "status": "going",
+  "url": "https://partiful.com/e/wGyYQkofORJBNyA6scAh",
+  "price": "",
+  "note": "End time estimated",
+  "img": "https://partiful.imgix.net/external/user/UWqdwVEOgEspoAGNuRyR/JCqYK7QGD_PfOHMTu868C?fit=clip&w=1440&auto=format",
+  "lat": 37.80551,
+  "lng": -122.43194
+ },
+ {
+  "title": "Noe Valley Night Market",
+  "date": "2026-12-29",
+  "start": "17:00",
+  "end": "20:00",
+  "venue": "Noe Valley Town Square",
+  "address": "3861 24th St, San Francisco, CA",
+  "source": "funcheap",
+  "status": "calendar",
+  "url": "",
+  "price": "Free",
+  "note": "Monthly",
+  "img": "",
+  "lat": 37.75136,
+  "lng": -122.42897
+ },
+ {
+  "title": "New Year's Eve Fireworks",
+  "date": "2026-12-31",
+  "start": "23:30",
+  "end": "00:30",
+  "venue": "Embarcadero waterfront",
+  "address": "Near Ferry Building, San Francisco, CA",
+  "source": "funcheap",
+  "status": "calendar",
+  "url": "",
+  "price": "Free",
+  "note": "Show at midnight",
+  "img": "",
+  "lat": 37.79398,
+  "lng": -122.39499
+ },
+ {
+  "title": "San Francisco Bike Party",
+  "date": "2027-01-01",
+  "start": "20:00",
+  "end": "22:00",
+  "venue": "Meet point TBA",
+  "address": "San Francisco, CA",
+  "source": "funcheap",
+  "status": "calendar",
+  "url": "",
+  "price": "Free",
+  "note": "Repeats first Fridays",
+  "img": "",
+  "lat": null,
+  "lng": null
+ },
+ {
+  "title": "Drink & Draw - SF Doodle Club",
+  "date": "2027-01-06",
+  "start": "18:00",
+  "end": "21:00",
+  "venue": "Southern Pacific Brewing",
+  "address": "620 Treat Ave, San Francisco, CA",
+  "source": "partiful",
+  "status": "awareness",
+  "url": "https://partiful.com/e/oKDVAzL87alaEknoIc5i",
+  "price": "Free",
+  "note": "Overlaps Wednesday meditation",
+  "img": "",
+  "lat": 37.76011,
+  "lng": -122.41412
+ },
+ {
+  "title": "Downtown First Thursdays (block party)",
+  "date": "2027-01-07",
+  "start": "17:00",
+  "end": "22:00",
+  "venue": "2nd Street, Downtown",
+  "address": "2nd St between Market & Howard, San Francisco, CA",
+  "source": "funcheap",
+  "status": "calendar",
+  "url": "",
+  "price": "Free (Eventbrite RSVP available)",
+  "note": "",
+  "img": "",
+  "lat": 37.78679,
+  "lng": -122.39825
+ },
+ {
+  "title": "MLK Jr. Marade & Festival",
+  "date": "2027-01-18",
+  "start": "11:00",
+  "end": "16:00",
+  "venue": "Yerba Buena Gardens",
+  "address": "750 Howard St, San Francisco, CA",
+  "source": "funcheap",
+  "status": "calendar",
+  "url": "",
+  "price": "Free",
+  "note": "March from 4th & King; end time estimated",
+  "img": "",
+  "lat": null,
+  "lng": null
+ },
+ {
+  "title": "Lift Every Voice \u2014 Free MLK Day Gospel/Blues Concert",
+  "date": "2027-01-18",
+  "start": "19:00",
+  "end": "21:00",
+  "venue": "Castro Theatre",
+  "address": "429 Castro St, San Francisco, CA",
+  "source": "funcheap",
+  "status": "calendar",
+  "url": "",
+  "price": "Free with RSVP",
+  "note": "",
+  "img": "",
+  "lat": 37.76201,
+  "lng": -122.43469
+ },
+ {
+  "title": "Chinese New Year Flower Market Fair",
+  "date": "2027-01-30",
+  "start": "10:00",
+  "end": "18:00",
+  "venue": "Grant Avenue, Chinatown",
+  "address": "Grant Ave between Clay St & Broadway, San Francisco, CA",
+  "source": "funcheap",
+  "status": "calendar",
+  "url": "",
+  "price": "Free",
+  "note": "2027 hours from 2026 edition; also Sun Jan 31",
+  "img": "",
+  "lat": 37.79428,
+  "lng": -122.40626
+ },
+ {
+  "title": "THE PRINCESS DIARIES: SF EDITION",
+  "date": "2027-01-31",
+  "start": "13:30",
+  "end": "15:30",
+  "venue": "Location To Be Announced",
+  "address": "Pixley St, San Francisco, CA",
+  "source": "partiful",
+  "status": "going",
+  "url": "https://partiful.com/e/fEIkJuPCyICNC3SJJlDL",
+  "price": "",
+  "note": "End time estimated",
+  "img": "https://partiful.imgix.net/external/user/72ZId1JMWOz3ssakaZnB/ADcYxrioFH1VwShcfCOeI?fit=clip&w=1440&auto=format",
+  "lat": 37.79859,
+  "lng": -122.43495
+ },
+ {
+  "title": "Downtown First Thursdays (block party)",
+  "date": "2027-02-04",
+  "start": "17:00",
+  "end": "22:00",
+  "venue": "2nd Street, Downtown",
+  "address": "2nd St between Market & Howard, San Francisco, CA",
+  "source": "funcheap",
+  "status": "calendar",
+  "url": "",
+  "price": "Free (Eventbrite RSVP available)",
+  "note": "",
+  "img": "",
+  "lat": 37.78679,
+  "lng": -122.39825
+ },
+ {
+  "title": "Valentine's Day Pillow Fight",
+  "date": "2027-02-14",
+  "start": "17:45",
+  "end": "19:45",
+  "venue": "Embarcadero Plaza (Justin Herman Plaza)",
+  "address": "Market & Steuart, San Francisco, CA",
+  "source": "funcheap",
+  "status": "calendar",
+  "url": "",
+  "price": "Free",
+  "note": "Tentative \u2014 2027 edition not yet posted",
+  "img": "",
+  "lat": 37.79398,
+  "lng": -122.39499
+ }
+];
+const ST = {going:{label:"Going · 2",color:"#12b76a",cls:"going"},paid:{label:"Paid · needs approval",color:"#f59e0b",cls:"paid"},calendar:{label:"On calendar · drop-in",color:"#3e7bfa",cls:"calendar"},awareness:{label:"Awareness only",color:"#8a8f98",cls:"awareness"}};
+const DAYS=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function pdate(s){const[a,b,c]=s.split("-").map(Number);return new Date(a,b-1,c)}
+function dlabel(s){const d=pdate(s);return DAYS[d.getDay()]+", "+MON[d.getMonth()]+" "+d.getDate()+(d.getFullYear()>2026?", "+d.getFullYear():"")}
+function t12(t){if(!t)return"";let[h,m]=t.split(":").map(Number);const ap=h>=12?"PM":"AM";h=h%12||12;return h+(m?":"+String(m).padStart(2,"0"):"")+" "+ap}
+function when(e){if(!e.start)return"Time TBA";return t12(e.start)+(e.end?" – "+t12(e.end):"")}
+function grad(e){const g={"partiful":"linear-gradient(135deg,#ffe066,#ff8fab)","funcheap":"linear-gradient(135deg,#a5d8ff,#b197fc)"};return g[e.source]||g.partiful}
+let filter="all",query="";
+const $=s=>document.querySelector(s);
+function counts(){const c={going:0,paid:0,calendar:0,awareness:0};EVENTS.forEach(e=>c[e.status]++);$("#stats").innerHTML=`<span class="stat">🎉 ${EVENTS.length} events</span><span class="stat">✅ ${c.going} going</span><span class="stat">💸 ${c.paid} to approve</span><span class="stat">📅 ${c.calendar} on calendar</span>`}
+function matches(e){return(filter==="all"||e.status===filter)&&(!query||(e.title+" "+e.venue+" "+e.address).toLowerCase().includes(query))}
+function render(){
+ const list=EVENTS.filter(matches);
+ if(!list.length){$("#listView").innerHTML='<div class="empty">Nothing here — try another filter 🎈</div>';return}
+ const groups={};list.forEach(e=>{(groups[e.date]=groups[e.date]||[]).push(e)});
+ $("#listView").innerHTML=Object.keys(groups).sort().map(d=>`<div class="dayhead"><h2>${dlabel(d)}</h2><span class="n">${groups[d].length} event${groups[d].length>1?"s":""}</span></div><div class="grid">${groups[d].map(card).join("")}</div>`).join("");
+}
+function card(e){const i=EVENTS.indexOf(e);const st=ST[e.status];
+ return `<article class="card" onclick="openEv(${i})"><div class="ph">${e.img?`<img loading="lazy" src="${e.img}" alt="">`:`<div class="noimg" style="background:${grad(e)}">🎉</div>`}<span class="pill ${st.cls}">${st.label}</span></div><div class="body"><div class="when">${when(e)}</div><div class="title">${e.title}</div><div class="venue">📍 ${e.venue}</div><div class="meta"><span class="tag">${e.source==="partiful"?"Partiful":"Funcheap / DoTheBay"}</span>${e.price?`<span class="tag price">🎟 ${e.price}</span>`:""}${e.lat?"":'<span class="tag">📌 venue TBA</span>'}</div></div></article>`}
+let mini=null;
+function openEv(i){const e=EVENTS[i];const st=ST[e.status];
+ const dir=e.address&&e.address!=="San Francisco, CA"?`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(e.venue+" "+e.address)}`:"";
+ $("#panel").innerHTML=`<button class="x" onclick="closeEv()">✕</button><div class="ph">${e.img?`<img src="${e.img}" alt="">`:`<div class="noimg" style="background:${grad(e)}">🎉</div>`}<span class="pill ${st.cls}">${st.label}</span></div><div class="pbody"><div class="when">${dlabel(e.date)} · ${when(e)}</div><h2>${e.title}</h2>
+ <div class="row"><span class="ic">📍</span><span><b>${e.venue}</b><br>${e.address}</span></div>
+ ${e.price?`<div class="row"><span class="ic">🎟️</span><span><b>Price:</b> ${e.price}</span></div>`:""}
+ <div class="row"><span class="ic">🏷️</span><span><b>Status:</b> ${e.status==="going"?"You're going! RSVP'd for 2 (Shreyas + Lavanya)":e.status==="paid"?"Paid event — not booked. Waiting for Shreyas to approve":e.status==="calendar"?"On your Google Calendar — free drop-in, no sign-up needed":"On your calendar for awareness — not RSVP'd (clashed with other plans)"}</span></div>
+ ${e.note?`<div class="row"><span class="ic">📝</span><span>${e.note}</span></div>`:""}
+ <div class="btns">${e.url?`<a class="btn" target="_blank" rel="noopener" href="${e.url}">View event page ↗</a>`:""}${dir?`<a class="btn ghost" target="_blank" rel="noopener" href="${dir}">Directions 🧭</a>`:""}</div>
+ ${e.lat?'<div id="miniMap"></div>':""}</div>`;
+ $("#sheet").classList.add("open");document.body.style.overflow="hidden";
+ if(e.lat){setTimeout(()=>{if(mini){mini.remove()}mini=L.map("miniMap").setView([e.lat,e.lng],14);L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"© OpenStreetMap"}).addTo(mini);L.marker([e.lat,e.lng]).addTo(mini)},60)}
+}
+function closeEv(){$("#sheet").classList.remove("open");document.body.style.overflow=""}
+$("#scrim").onclick=closeEv;document.addEventListener("keydown",e=>{if(e.key==="Escape")closeEv()});
+$("#chips").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;document.querySelectorAll(".chip").forEach(c=>c.classList.remove("on"));b.classList.add("on");filter=b.dataset.f;render()});
+$("#q").addEventListener("input",e=>{query=e.target.value.trim().toLowerCase();render()});
+let bigMap=null;
+function showMap(on){$("#listView").style.display=on?"none":"";$("#mapView").style.display=on?"block":"none";$("#vList").classList.toggle("on",!on);$("#vMap").classList.toggle("on",on);
+ if(on&&!bigMap){bigMap=L.map("map").setView([37.78,-122.44],12);L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"© OpenStreetMap contributors"}).addTo(bigMap);
+  EVENTS.forEach((e,i)=>{if(!e.lat)return;const m=L.marker([e.lat,e.lng],{icon:L.divIcon({className:"",html:`<div class="pin" style="background:${ST[e.status].color}"></div>`,iconSize:[20,20],iconAnchor:[10,10]})}).addTo(bigMap);m.bindPopup(`<b>${e.title}</b><br>${dlabel(e.date)} · ${when(e)}<br>📍 ${e.venue}<br><button class="popbtn" onclick="openEv(${i})">See details →</button>`)});
+ } if(on)setTimeout(()=>bigMap.invalidateSize(),80)}
+$("#vList").onclick=()=>showMap(false);$("#vMap").onclick=()=>showMap(true);
+counts();render();
+</script>
+</body>
+</html>
