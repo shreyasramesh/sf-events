@@ -94,6 +94,14 @@ button,.card,.chip{touch-action:manipulation}
 .grab{position:sticky;top:0;z-index:3;display:flex;justify-content:center;padding:10px 0 6px;background:#fff;touch-action:none;cursor:grab}
 .grab span{display:block;width:46px;height:5px;border-radius:99px;background:#d9d2c0}
 .panel .ph{touch-action:none}
+/* Compact filter bar: one scrollable row, List/Map pinned right */
+.filterrow{display:flex;align-items:center;gap:8px;margin-top:10px}
+.chips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;margin-top:0;padding:2px;min-width:0}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;white-space:nowrap}
+.seg{margin-left:0;flex:0 0 auto}
+.toolbar{padding-top:calc(10px + env(safe-area-inset-top));padding-bottom:8px}
+@media(max-width:480px){.chip{font-size:13px;padding:7px 12px}.seg button{padding:8px 14px;font-size:13px}.search{padding:11px 18px}}
 </style>
 </head>
 <body>
@@ -106,12 +114,13 @@ button,.card,.chip{touch-action:manipulation}
 </header>
 <div class="toolbar">
 <input class="search" id="q" type="search" placeholder="🔍 Search events, venues, neighborhoods…">
-<div class="chips" id="chips">
+<div class="filterrow"><div class="chips" id="chips">
 <button class="chip on" data-f="all">All events</button>
 <button class="chip" data-f="going">✅ Going</button>
 <button class="chip" data-f="paid">💸 Paid · needs approval</button>
 <button class="chip" data-f="calendar">📅 On calendar</button>
 <button class="chip" data-f="awareness">👀 Awareness</button>
+</div>
 <div class="seg"><button id="vList" class="on">List</button><button id="vMap">Map</button></div>
 </div>
 </div>
