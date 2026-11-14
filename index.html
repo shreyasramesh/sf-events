@@ -89,6 +89,11 @@ button,.card,.chip{touch-action:manipulation}
 @media(min-width:700px){.grid{grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}}
 @media(min-width:900px){.panel{width:min(760px,100%)}}
 @media(min-width:1500px){.wrap{max-width:1320px}.grid{grid-template-columns:repeat(4,1fr)}}
+/* Swipe-down-to-close for the detail sheet */
+.panel{will-change:transform}
+.grab{position:sticky;top:0;z-index:3;display:flex;justify-content:center;padding:10px 0 6px;background:#fff;touch-action:none;cursor:grab}
+.grab span{display:block;width:46px;height:5px;border-radius:99px;background:#d9d2c0}
+.panel .ph{touch-action:none}
 </style>
 </head>
 <body>
@@ -1149,7 +1154,7 @@ function card(e){const i=EVENTS.indexOf(e);const st=ST[e.status];
 let mini=null;
 function openEv(i){const e=EVENTS[i];const st=ST[e.status];
  const dir=e.address&&e.address!=="San Francisco, CA"?`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(e.venue+" "+e.address)}`:"";
- $("#panel").innerHTML=`<button class="x" onclick="closeEv()">✕</button><div class="ph">${e.img?`<img src="${e.img}" alt="">`:`<div class="noimg" style="background:${grad(e)}">🎉</div>`}<span class="pill ${st.cls}">${st.label}</span></div><div class="pbody"><div class="when">${dlabel(e.date)} · ${when(e)}</div><h2>${e.title}</h2>
+ $("#panel").innerHTML=`<div class="grab" id="grab"><span></span></div><button class="x" onclick="closeEv()">✕</button><div class="ph">${e.img?`<img src="${e.img}" alt="">`:`<div class="noimg" style="background:${grad(e)}">🎉</div>`}<span class="pill ${st.cls}">${st.label}</span></div><div class="pbody"><div class="when">${dlabel(e.date)} · ${when(e)}</div><h2>${e.title}</h2>
  <div class="row"><span class="ic">📍</span><span><b>${e.venue}</b><br>${e.address}</span></div>
  ${e.price?`<div class="row"><span class="ic">🎟️</span><span><b>Price:</b> ${e.price}</span></div>`:""}
  <div class="row"><span class="ic">🏷️</span><span><b>Status:</b> ${e.status==="going"?"You're going! RSVP'd for 2 (Shreyas + Lavanya)":e.status==="paid"?"Paid event — not booked. Waiting for Shreyas to approve":e.status==="calendar"?"On your Google Calendar — free drop-in, no sign-up needed":"On your calendar for awareness — not RSVP'd (clashed with other plans)"}</span></div>
@@ -1159,8 +1164,13 @@ function openEv(i){const e=EVENTS[i];const st=ST[e.status];
  $("#sheet").classList.add("open");document.body.style.overflow="hidden";
  if(e.lat){setTimeout(()=>{if(mini){mini.remove()}mini=L.map("miniMap").setView([e.lat,e.lng],14);L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"© OpenStreetMap"}).addTo(mini);L.marker([e.lat,e.lng]).addTo(mini)},60)}
 }
-function closeEv(){$("#sheet").classList.remove("open");document.body.style.overflow=""}
+function closeEv(){$("#sheet").classList.remove("open");document.body.style.overflow="";const p=$("#panel");p.style.transform="";p.style.transition=""}
 $("#scrim").onclick=closeEv;document.addEventListener("keydown",e=>{if(e.key==="Escape")closeEv()});
+(function(){const panel=$("#panel");let startY=null,dy=0,centered=false;
+ function down(e){if(!$("#sheet").classList.contains("open"))return;if(panel.scrollTop>0)return;if(!(e.target.closest("#grab")||e.target.closest(".ph")))return;startY=e.clientY;dy=0;centered=matchMedia("(min-width:700px)").matches;panel.style.transition="none";try{panel.setPointerCapture(e.pointerId)}catch(_){}}
+ function move(e){if(startY===null)return;dy=Math.max(0,e.clientY-startY);panel.style.transform=centered?`translate(-50%,calc(-50% + ${dy}px))`:`translate(-50%,${dy}px)`}
+ function up(){if(startY===null)return;const d=dy;startY=null;panel.style.transition="transform .22s ease";if(d>110){panel.style.transform=centered?"translate(-50%,60vh)":"translate(-50%,110%)";setTimeout(closeEv,170)}else{panel.style.transform=centered?"translate(-50%,-50%)":"translateX(-50%)";setTimeout(()=>{panel.style.transition="";panel.style.transform=""},240)}}
+ panel.addEventListener("pointerdown",down);panel.addEventListener("pointermove",move);panel.addEventListener("pointerup",up);panel.addEventListener("pointercancel",up)})();
 $("#chips").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;document.querySelectorAll(".chip").forEach(c=>c.classList.remove("on"));b.classList.add("on");filter=b.dataset.f;render()});
 $("#q").addEventListener("input",e=>{query=e.target.value.trim().toLowerCase();render()});
 let bigMap=null;
